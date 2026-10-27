@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WebGIS Interaktif Kabupaten Tana Toraja</title>
+
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw=="
+    crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+  <!-- Custom Style Sheet -->
+  <link rel="stylesheet" href="../css/style.css?v=2">
+
+  <!-- Leaflet & Chart.js Scripts -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- Custom App JavaScript logic (Deferred) -->
+  <script src="../js/app.js?v=2" defer></script>
+</head>
+
+<body>
+
+  <!-- Top Header bar -->
+  <header>
+    <div class="brand">
+      <div class="brand-logo">
+        <i class="fas fa-map-marked-alt"></i>
+      </div>
+      <div class="brand-text">
+        <h1>WebGIS Geoportal</h1>
+        <p> Persebaran Fasilitas Pendidikan dan Kesehatan Tana Toraja</p>
+      </div>
+    </div>
+
+    <!-- Quick stats overview in header -->
+    <div class="quick-stats-header">
+      <div class="quick-stat-item">
+        <div class="quick-stat-icon"><i class="fas fa-graduation-cap"></i></div>
+        <div class="quick-stat-info">
+          <span class="quick-stat-val" id="hstat-sch">0</span>
+          <span class="quick-stat-lbl">Sekolah</span>
+        </div>
+      </div>
+      <div class="quick-stat-item">
+        <div class="quick-stat-icon"><i class="fas fa-clinic-medical"></i></div>
+        <div class="quick-stat-info">
+          <span class="quick-stat-val" id="hstat-health">0</span>
+          <span class="quick-stat-lbl">Kesehatan</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- App Main Content Grid Layout -->
+  <div class="app-container">
+
+    <!-- LEFT SIDEBAR: Controls & Filters -->
+    <aside class="sidebar left-sidebar">
+
+      <!-- Search Autocomplete box -->
+      <div class="panel-block">
+        <h3 class="panel-title"><i class="fas fa-search"></i> Pencarian Objek</h3>
+        <div class="search-wrapper">
+          <div class="search-input-group">
+            <i class="fas fa-search search-icon"></i>
+            <input type="text" id="search-input" class="search-input" placeholder="Cari sekolah, puskesmas..."
+              autocomplete="off">
+            <button id="search-clear" class="search-clear"><i class="fas fa-times"></i></button>
+          </div>
+          <div id="search-results" class="search-results-dropdown"></div>
+        </div>
+      </div>
+
+      <!-- GIS Layer Controls -->
+      <div class="panel-block">
+        <h3 class="panel-title"><i class="fas fa-layer-group"></i> Layer Kontrol</h3>
+        <div class="toggle-list">
+          <div class="toggle-item">
+            <span class="toggle-label"><i class="fas fa-draw-polygon" style="color: rgba(255,255,255,0.4)"></i>
+              Kecamatan</span>
+            <label class="switch">
+              <input type="checkbox" id="chk-layer-kec" checked>
+              <span class="slider"></span>
+            </label>
+          </div>
+          <div class="toggle-item">
+            <span class="toggle-label"><i class="fas fa-border-none" style="color: rgba(255,255,255,0.3)"></i> Desa /
+              Kelurahan</span>
+            <label class="switch">
+              <input type="checkbox" id="chk-layer-desa">
+              <span class="slider"></span>
+            </label>
+          </div>
+          <div class="toggle-item">
+            <span class="toggle-label"><span class="color-dot" style="color: var(--color-sd)"></span> Sekolah</span>
+            <label class="switch">
+              <input type="checkbox" id="chk-layer-sek" checked>
+              <span class="slider"></span>
+            </label>
+          </div>
+          <div class="toggle-item">
+            <span class="toggle-label"><span class="color-dot" style="color: var(--color-pusk)"></span> Puskesmas</span>
+            <label class="switch">
+              <input type="checkbox" id="chk-layer-pusk" checked>
+              <span class="slider"></span>
+            </label>
+          </div>
+          <div class="toggle-item">
+            <span class="toggle-label"><span class="color-dot" style="color: var(--color-rs)"></span> Rumah Sakit</span>
+            <label class="switch">
+              <input type="checkbox" id="chk-layer-rs" checked>
+              <span class="slider"></span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Facility Category Filters -->
+      <div class="panel-block">
+        <h3 class="panel-title"><i class="fas fa-filter"></i> Filter Fasilitas</h3>
+        <div class="toggle-list">
+          <div class="toggle-item">
+            <span class="toggle-label"><i class="fas fa-graduation-cap" style="color: var(--color-sd)"></i> Sekolah
+              Dasar (SD)</span>
+            <label class="switch">
+              <input type="checkbox" id="filter-sd" checked>
+              <span class="slider"></span>
+            </label>
+          </div>
+          <div class="toggle-item">
+            <span class="toggle-label"><i class="fas fa-book-reader" style="color: var(--color-smp)"></i> SMP</span>
+            <label class="switch">
+              <input type="checkbox" id="filter-smp" checked>
+              <span class="slider"></span>
+            </label>
+          </div>
+          <div class="toggle-item">
+            <span class="toggle-label"><i class="fas fa-university" style="color: var(--color-sma)"></i> SMA /
+              SMK</span>
+            <label class="switch">
+              <input type="checkbox" id="filter-sma" checked>
+              <span class="slider"></span>
+            </label>
+          </div>
+          <div class="toggle-item">
+            <span class="toggle-label"><i class="fas fa-clinic-medical" style="color: var(--color-pusk)"></i>
+              Puskesmas</span>
+            <label class="switch">
+              <input type="checkbox" id="filter-pusk" checked>
+              <span class="slider"></span>
+            </label>
+          </div>
+          <div class="toggle-item">
+            <span class="toggle-label"><i class="fas fa-hospital" style="color: var(--color-rs)"></i> Rumah Sakit</span>
+            <label class="switch">
+              <input type="checkbox" id="filter-rs" checked>
+              <span class="slider"></span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- School Accreditation Filters -->
+      <div class="panel-block">
+        <h3 class="panel-title"><i class="fas fa-award"></i> Filter Akreditasi Sekolah</h3>
+        <div class="toggle-list">
+          <div class="toggle-item">
+            <span class="toggle-label"><span class="color-dot" style="background-color: #4ade80; color: #4ade80;"></span> Akreditasi A</span>
+            <label class="switch">
+              <input type="checkbox" id="filter-akred-a" checked>
+              <span class="slider"></span>
+            </label>
+          </div>
+          <div class="toggle-item">
+            <span class="toggle-label"><span class="color-dot" style="background-color: #fbbf24; color: #fbbf24;"></span> Akreditasi B</span>
+            <label class="switch">
+              <input type="checkbox" id="filter-akred-b" checked>
+              <span class="slider"></span>
+            </label>
+          </div>
+          <div class="toggle-item">
+            <span class="toggle-label"><span class="color-dot" style="background-color: #f87171; color: #f87171;"></span> Akreditasi C</span>
+            <label class="switch">
+              <input type="checkbox" id="filter-akred-c" checked>
+              <span class="slider"></span>
+            </label>
+          </div>
+          <div class="toggle-item">
+            <span class="toggle-label"><span class="color-dot" style="background-color: #9ca3af; color: #9ca3af;"></span> Belum Terakreditasi / Lainnya</span>
+            <label class="switch">
+              <input type="checkbox" id="filter-akred-none" checked>
+              <span class="slider"></span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+
+      <!-- Service Area / Buffers switches -->
+      <div class="panel-block">
+        <h3 class="panel-title"><i class="fas fa-radiation"></i> Area Jangkauan (Buffer)</h3>
+        <div class="toggle-list">
+          <div class="toggle-item">
+            <span class="toggle-label"><i class="fas fa-shield-alt" style="color: var(--color-pusk)"></i> Buffer 3 km
+              Puskesmas</span>
+            <label class="switch">
+              <input type="checkbox" id="chk-buffer-pusk">
+              <span class="slider"></span>
+            </label>
+          </div>
+          <div class="toggle-item">
+            <span class="toggle-label"><i class="fas fa-shield-alt" style="color: var(--color-sma)"></i> Buffer 5 km
+              SMA/SMK</span>
+            <label class="switch">
+              <input type="checkbox" id="chk-buffer-sma">
+              <span class="slider"></span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+    </aside>
+
+    <!-- CENTER AREA: Fullscreen Interactive Map -->
+    <main class="map-container">
+      <div id="map"></div>
+    </main>
+
+    <!-- RIGHT SIDEBAR: Dashboard Statistics -->
+    <aside class="sidebar right-sidebar">
+
+      <!-- Statistic Numeric Cards -->
+      <div class="panel-block">
+        <h3 class="panel-title"><i class="fas fa-chart-line"></i> Dashboard Statistik</h3>
+        <div class="stats-grid">
+          <div class="stat-card">
+            <i class="fas fa-map-marked stat-card-icon"></i>
+            <span class="stat-val" id="stat-kec">19</span>
+            <span class="stat-lbl">Kecamatan</span>
+          </div>
+          <div class="stat-card sd">
+            <i class="fas fa-graduation-cap stat-card-icon"></i>
+            <span class="stat-val" id="stat-sd">0</span>
+            <span class="stat-lbl">Fasilitas SD</span>
+          </div>
+          <div class="stat-card smp">
+            <i class="fas fa-book-reader stat-card-icon"></i>
+            <span class="stat-val" id="stat-smp">0</span>
+            <span class="stat-lbl">Fasilitas SMP</span>
+          </div>
+          <div class="stat-card sma">
+            <i class="fas fa-university stat-card-icon"></i>
+            <span class="stat-val" id="stat-sma">0</span>
+            <span class="stat-lbl">Fasilitas SMA/SMK</span>
+          </div>
+          <div class="stat-card pusk">
+            <i class="fas fa-clinic-medical stat-card-icon"></i>
+            <span class="stat-val" id="stat-pusk">0</span>
+            <span class="stat-lbl">Puskesmas</span>
+          </div>
+          <div class="stat-card rs">
+            <i class="fas fa-hospital stat-card-icon"></i>
+            <span class="stat-val" id="stat-rs">0</span>
+            <span class="stat-lbl">Rumah Sakit</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Hover Information Panel -->
+      <div class="panel-block">
+        <h3 class="panel-title"><i class="fas fa-info-circle"></i> Detail Kecamatan</h3>
+        <div id="kecamatan-detail" class="kecamatan-hover-box">
+          <span style="font-size: 13px; color: var(--text-secondary);">Arahkan kursor ke kecamatan di peta</span>
+        </div>
+      </div>
+
+
+      <!-- Top 5 Districts Ranking Chart -->
+      <div class="panel-block">
+        <h3 class="panel-title"><i class="fas fa-trophy"></i> Top 5 Kecamatan</h3>
+        <div class="chart-container">
+          <canvas id="rankingChart"></canvas>
+        </div>
+      </div>
+
+    </aside>
+
+  </div>
+
+</body>
+
+</html>
